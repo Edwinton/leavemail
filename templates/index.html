@@ -61,11 +61,11 @@
     <div class="attachment-info" style="background: #EFF6FF; padding: 12px; border-radius: 12px; margin-bottom: 16px;">
         <p style="margin: 0; font-size: 14px;">
             📎 <strong>Need to attach a file?</strong><br>
-            <small>Medical certificates, doctor's notes, or permission letters can be attached AFTER clicking "Send Email":</small>
+            <small>Medical certificates, doctor's notes, or permission letters can be attached from your email app after opening the draft:</small>
         </p>
         <ol style="margin: 8px 0 0 20px; font-size: 13px;">
-            <li>Click "Send Email" below</li>
-            <li>Your email client will open</li>
+            <li>Click "Create Email Draft" below</li>
+            <li>Review it, then click "Open in Email App"</li>
             <li>Look for the 📎 attachment icon</li>
             <li>Select your file and send</li>
         </ol>
@@ -74,15 +74,19 @@
     <div class="email-preview" id="emailPreview" style="display: none;">
         <h3>📧 Email Preview</h3>
         <div class="preview-subject" id="previewSubject"></div>
-        <div class="preview-body" id="previewBody"></div>
+        <div class="preview-body" id="previewBody" style="white-space: pre-wrap;"></div>
+        <div class="action-buttons" style="margin-top: 16px;">
+            <a id="openEmailBtn" class="btn btn-primary" href="#" style="display: none;">Open in Email App</a>
+            <button type="button" id="copyEmailBtn" class="btn btn-secondary">Copy Subject and Message</button>
+        </div>
     </div>
     
     <div class="action-buttons">
         <button type="button" id="previewBtn" class="btn btn-secondary">👁️ Preview</button>
-        <button type="submit" id="sendBtn" class="btn btn-primary">✉️ Send Email</button>
+        <button type="submit" id="sendBtn" class="btn btn-primary">✉️ Create Email Draft</button>
     </div>
     
-    <button type="button" id="quickSendBtn" class="btn btn-emergency">⚡ QUICK SEND</button>
+    <button type="button" id="quickSendBtn" class="btn btn-emergency">⚡ QUICK DRAFT</button>
 </form>
 
 <!-- Security PIN Modal -->

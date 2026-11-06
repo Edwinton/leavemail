@@ -49,8 +49,8 @@ python app.py
 
 ## Known limitations
 
-- **Storage**: settings, history, and lock codes live in server-side session files. On Render's free service, session data may be cleared when the instance restarts.
-- **History**: capped at 50 entries per browser session.
+- **Storage**: settings, history, and lock codes are kept in browser storage on this device. They are not synced across devices and can be removed by clearing browser data.
+- **History**: capped at 50 entries in this browser.
 - **Security**: lock is a local UX guard, not server-enforced. Anyone with device access can bypass it.
 - **Voice input**: keyword matching, not real NLP.
 - **No CSRF**: single-user tool, low risk.

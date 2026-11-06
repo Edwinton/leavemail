@@ -7,6 +7,8 @@ let pendingResolve = null;
 let currentPattern = [];
 let storedPattern = '';
 let isSettingPattern = true;
+const SETTINGS_STORAGE_KEY = 'leavemail_settings_v1';
+const HISTORY_STORAGE_KEY = 'leavemail_history_v1';
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,8 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // Load settings from server
 async function loadSettings() {
     try {
-        const response = await fetch('/api/get-settings');
-        settings = await response.json();
+        const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        if (savedSettings) {
+            settings = JSON.parse(savedSettings);
+        } else {
+            const response = await fetch('/api/get-settings');
+            if (!response.ok) throw new Error('Could not load settings');
+            settings = await response.json();
+            localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+        }
         
         // Populate form fields if on settings page
         if (document.getElementById('settingsForm')) {
@@ -468,18 +477,9 @@ async function generateAndPreview() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(emailData)
         });
+        if (!response.ok) throw new Error('Could not generate email');
         const data = await response.json();
-        
-        const previewDiv = document.getElementById('emailPreview');
-        const subjectDiv = document.getElementById('previewSubject');
-        const bodyDiv = document.getElementById('previewBody');
-        
-        if (previewDiv && subjectDiv && bodyDiv) {
-            subjectDiv.textContent = `📧 ${data.subject}`;
-            bodyDiv.innerHTML = data.body_html || data.body_plain.replace(/\n/g, '<br>');
-            previewDiv.style.display = 'block';
-            previewDiv.scrollIntoView({ behavior: 'smooth' });
-        }
+        showEmailDraft(data);
     } catch (error) {
         console.error('Error:', error);
         showToast('Error generating preview');
@@ -500,8 +500,51 @@ function collectFormData() {
         reason: document.getElementById('reason')?.value || 'Not specified',
         template_type: document.getElementById('selectedTemplate')?.value || 'professional',
         custom_template: document.getElementById('customTemplate')?.value || '',
-        email_theme: document.getElementById('emailTheme')?.value || 'default'
+        email_theme: settings.email_theme || 'default',
+        templates: settings.templates || {}
     };
+}
+
+function rememberHistoryEntry(entry) {
+    if (!entry) return;
+    try {
+        const history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
+        history.unshift(entry);
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, 50)));
+    } catch (error) {
+        console.error('Could not save leave history locally:', error);
+        showToast('Draft created, but browser storage is full');
+    }
+}
+
+function showEmailDraft(data) {
+    const previewDiv = document.getElementById('emailPreview');
+    const subjectDiv = document.getElementById('previewSubject');
+    const bodyDiv = document.getElementById('previewBody');
+    const openLink = document.getElementById('openEmailBtn');
+    const copyButton = document.getElementById('copyEmailBtn');
+    if (!previewDiv || !subjectDiv || !bodyDiv) return;
+
+    subjectDiv.textContent = `📧 ${data.subject || 'Leave request'}`;
+    bodyDiv.textContent = data.body_plain || '';
+    previewDiv.style.display = 'block';
+    if (openLink) {
+        openLink.href = data.mailto_link || '#';
+        openLink.style.display = data.mailto_link ? 'inline-flex' : 'none';
+    }
+    if (copyButton) {
+        copyButton.onclick = async () => {
+            const text = `Subject: ${data.subject || ''}\n\n${data.body_plain || ''}`;
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Email subject and message copied');
+            } catch (error) {
+                showToast('Copy failed. Select and copy the preview text.');
+            }
+        };
+    }
+    rememberHistoryEntry(data.history_entry);
+    previewDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
 // Check security and send
@@ -615,10 +658,10 @@ async function sendEmail() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(emailData)
         });
+        if (!response.ok) throw new Error('Could not generate email');
         const data = await response.json();
-        
-        window.location.href = data.mailto_link;
-        showToast('✅ Email client opened! Add attachments if needed.');
+        showEmailDraft(data);
+        showToast('Draft ready. Review it, then open your email app to send.');
         
         if (document.getElementById('historyList')) {
             setTimeout(() => loadHistory(), 500);
@@ -649,7 +692,8 @@ async function quickSend() {
         reason: defaultReason,
         template_type: 'professional',
         custom_template: '',
-        email_theme: settings.email_theme || 'default'
+        email_theme: settings.email_theme || 'default',
+        templates: settings.templates || {}
     };
     
     try {
@@ -658,10 +702,10 @@ async function quickSend() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(quickData)
         });
+        if (!response.ok) throw new Error('Could not generate email');
         const data = await response.json();
-        
-        window.location.href = data.mailto_link;
-        showToast('⚡ Quick email sent!');
+        showEmailDraft(data);
+        showToast('Quick draft ready. Review it, then open your email app to send.');
     } catch (error) {
         showToast('Quick send failed');
     }
@@ -735,27 +779,21 @@ async function saveSettings() {
     }
     
     try {
-        const response = await fetch('/api/save-settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(settingsData)
-        });
-        
-        if (response.ok) {
-            showToast('✅ Settings saved!');
-            await loadSettings();
-            applyAccessibilitySettings();
-            setTheme(settingsData.theme);
-        }
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsData));
+        settings = settingsData;
+        showToast('✅ Settings saved on this device');
+        applyAccessibilitySettings();
+        setTheme(settingsData.theme);
     } catch (error) {
-        showToast('Error saving settings');
+        showToast('Could not save settings in this browser');
     }
 }
 
 // Reset settings
 async function resetSettings() {
     if (confirm('Reset all settings to defaults? This cannot be undone.')) {
-        await fetch('/api/clear-history', { method: 'POST' });
+        localStorage.removeItem(SETTINGS_STORAGE_KEY);
+        localStorage.removeItem(HISTORY_STORAGE_KEY);
         window.location.reload();
     }
 }
@@ -806,8 +844,15 @@ function escapeHtml(value) {
 
 async function loadHistory() {
     try {
-        const response = await fetch('/api/get-history');
-        const history = await response.json();
+        let history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
+        if (!localStorage.getItem(HISTORY_STORAGE_KEY)) {
+            // One-time migration from the older server-side session history.
+            const response = await fetch('/api/get-history');
+            if (response.ok) {
+                history = await response.json();
+                localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, 50)));
+            }
+        }
         
         const container = document.getElementById('historyList');
         const emptyState = document.getElementById('emptyState');
@@ -878,7 +923,7 @@ function showHistoryDetail(item) {
 async function clearHistory() {
     if (confirm('Delete all leave history? This cannot be undone.')) {
         try {
-            await fetch('/api/clear-history', { method: 'POST' });
+            localStorage.setItem(HISTORY_STORAGE_KEY, '[]');
             showToast('History cleared');
             loadHistory();
         } catch (error) {

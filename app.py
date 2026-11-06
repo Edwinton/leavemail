@@ -26,8 +26,8 @@ if not _secret:
     # variable to start. Sessions will be invalidated on restart in this case.
     _secret = secrets.token_hex(32)
 app.secret_key = _secret
-# Keep settings and email history server-side. Flask's default signed cookie
-# cannot safely hold the complete templates and multiple history entries.
+# Retain server-side sessions for compatibility with settings/history saved by
+# older versions. Current settings and history are stored in each browser.
 app.config.update(
     SESSION_TYPE='filesystem',
     SESSION_FILE_DIR=os.path.join(tempfile.gettempdir(), 'leavemail_sessions'),
@@ -202,7 +202,9 @@ def generate_email():
     if template_type == 'custom' and custom_template:
         template = custom_template
     else:
-        templates = session.get('settings', {}).get('templates', DEFAULT_TEMPLATES)
+        templates = data.get('templates')
+        if not isinstance(templates, dict):
+            templates = session.get('settings', {}).get('templates', DEFAULT_TEMPLATES)
         template = templates.get(template_type, DEFAULT_TEMPLATES['professional'])
     
     theme_css = EMAIL_THEMES.get(email_theme, EMAIL_THEMES['default'])['css']
@@ -277,10 +279,6 @@ def generate_email():
         'recipient': recipient,
         'email_theme': email_theme
     }
-    
-    history = session.get('history', [])
-    history.insert(0, history_entry)
-    session['history'] = history[:50]
     
     return jsonify({
         'status': 'success',
