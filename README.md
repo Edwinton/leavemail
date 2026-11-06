@@ -45,11 +45,12 @@ pip install -r requirements.txt
 
 # Run the application
 python app.py
+```
 
 ## Known limitations
 
-- **Storage**: settings, history, and lock codes live in a signed session cookie. PIN/password/pattern are hashed before storage.
-- **History**: capped at 10 entries (4 KB cookie limit).
+- **Storage**: settings, history, and lock codes live in server-side session files. On Render's free service, session data may be cleared when the instance restarts.
+- **History**: capped at 50 entries per browser session.
 - **Security**: lock is a local UX guard, not server-enforced. Anyone with device access can bypass it.
 - **Voice input**: keyword matching, not real NLP.
 - **No CSRF**: single-user tool, low risk.

@@ -798,6 +798,12 @@ function loadTheme() {
 }
 
 // Load history
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+}
+
 async function loadHistory() {
     try {
         const response = await fetch('/api/get-history');
@@ -823,9 +829,9 @@ async function loadHistory() {
             div.className = 'history-item';
             div.innerHTML = `
                 <div class="history-date">📅 ${new Date(item.timestamp).toLocaleString()}</div>
-                <div class="history-student">👤 ${item.student || 'Unknown'}</div>
-                <div class="history-reason">📝 ${(item.reason || '').substring(0, 100)}${(item.reason || '').length > 100 ? '...' : ''}</div>
-                <div class="history-dates">📆 ${item.start?.substring(0, 10) || '?'} → ${item.end?.substring(0, 10) || '?'}</div>
+                <div class="history-student">👤 ${escapeHtml(item.student || 'Unknown')}</div>
+                <div class="history-reason">📝 ${escapeHtml((item.reason || '').substring(0, 100))}${(item.reason || '').length > 100 ? '...' : ''}</div>
+                <div class="history-dates">📆 ${escapeHtml(item.start?.substring(0, 10) || '?')} → ${escapeHtml(item.end?.substring(0, 10) || '?')}</div>
             `;
             div.addEventListener('click', () => showHistoryDetail(item));
             container.appendChild(div);
@@ -844,12 +850,12 @@ function showHistoryDetail(item) {
     
     content.innerHTML = `
         <p><strong>📅 Sent:</strong> ${new Date(item.timestamp).toLocaleString()}</p>
-        <p><strong>👤 Student:</strong> ${item.student}</p>
-        <p><strong>📆 Leave:</strong> ${item.start?.substring(0, 16) || '?'} → ${item.end?.substring(0, 16) || '?'}</p>
-        <p><strong>📝 Reason:</strong> ${item.reason}</p>
-        <p><strong>📧 Subject:</strong> ${item.subject}</p>
+        <p><strong>👤 Student:</strong> ${escapeHtml(item.student)}</p>
+        <p><strong>📆 Leave:</strong> ${escapeHtml(item.start?.substring(0, 16) || '?')} → ${escapeHtml(item.end?.substring(0, 16) || '?')}</p>
+        <p><strong>📝 Reason:</strong> ${escapeHtml(item.reason)}</p>
+        <p><strong>📧 Subject:</strong> ${escapeHtml(item.subject)}</p>
         <hr>
-        <div class="preview-body" style="max-height: 300px; overflow-y: auto;">${(item.body_plain || item.body || '').replace(/\n/g, '<br>')}</div>
+        <div class="preview-body" style="max-height: 300px; overflow-y: auto;">${escapeHtml(item.body_plain || item.body || '').replace(/\n/g, '<br>')}</div>
     `;
     
     modal.style.display = 'flex';

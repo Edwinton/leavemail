@@ -3,10 +3,12 @@ import json
 import datetime
 import re
 import os
+import tempfile
 from functools import wraps
 from urllib.parse import quote
 import html as html_escape
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_session import Session
 
 # Fix for Render deployment - ensure templates and static folders are found
 basedir = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +25,16 @@ if not _secret:
         raise RuntimeError("SECRET_KEY environment variable is required in production")
     _secret = 'dev-only-' + os.urandom(8).hex()
 app.secret_key = _secret
+# Keep settings and email history server-side. Flask's default signed cookie
+# cannot safely hold the complete templates and multiple history entries.
+app.config.update(
+    SESSION_TYPE='filesystem',
+    SESSION_FILE_DIR=os.path.join(tempfile.gettempdir(), 'leavemail_sessions'),
+    SESSION_PERMANENT=False,
+    SESSION_USE_SIGNER=True,
+)
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+Session(app)
 
 # Default templates with HTML formatting
 DEFAULT_TEMPLATES = {
