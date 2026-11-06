@@ -255,11 +255,13 @@ def generate_email():
 </body>
 </html>"""
     
-    plain_text_body = email_body_html.replace('<br>', '\n').replace('</p>', '\n\n')
-    plain_text_body = plain_text_body.replace('<p>', '').replace('</p>', '')
-    plain_text_body = plain_text_body.replace('<strong>', '').replace('</strong>', '')
+    plain_text_body = re.sub(r'<br\s*/?>\s*', '\n', email_body_html, flags=re.IGNORECASE)
+    plain_text_body = re.sub(r'</p\s*>\s*<p(?:\s[^>]*)?>', '\n\n', plain_text_body, flags=re.IGNORECASE)
+    plain_text_body = re.sub(r'</p\s*>', '\n\n', plain_text_body, flags=re.IGNORECASE)
     plain_text_body = re.sub(r'<[^>]+>', '', plain_text_body)
-    plain_text_body = plain_text_body.strip()
+    plain_text_body = html_escape.unescape(plain_text_body)
+    plain_text_body = re.sub(r'[ \t]*\n[ \t]*', '\n', plain_text_body)
+    plain_text_body = re.sub(r'\n{3,}', '\n\n', plain_text_body).strip()
     
     subject = f"Leave Request - {placeholders['student_name']} - {start_formatted[:20] if start_formatted else 'Upcoming'}"
     
