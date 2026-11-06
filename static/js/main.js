@@ -9,6 +9,26 @@ let storedPattern = '';
 let isSettingPattern = true;
 const SETTINGS_STORAGE_KEY = 'leavemail_settings_v1';
 const HISTORY_STORAGE_KEY = 'leavemail_history_v1';
+const PREVIOUS_CASUAL_TEMPLATE = `<div style="font-family: 'Segoe UI', sans-serif;">
+<p>Hi <strong>{recipient_name}</strong>,</p>
+
+<p><strong>{student_name}</strong> will need to be away from <strong>{start_datetime}</strong> to <strong>{end_datetime}</strong>.</p>
+
+<p><strong>Reason:</strong> {reason}</p>
+
+<p>Thanks for understanding!<br>
+<strong>{parent_name}</strong></p>
+</div>`;
+const UPDATED_CASUAL_TEMPLATE = `<div style="font-family: 'Segoe UI', sans-serif;">
+<p>Hi <strong>{recipient_name}</strong>,</p>
+
+<p>Just a quick heads-up that <strong>{student_name}</strong> will be out from <strong>{start_datetime}</strong> to <strong>{end_datetime}</strong>.</p>
+
+<p>It's because of {reason}. Thanks so much for understanding!</p>
+
+<p>Best,<br>
+<strong>{parent_name}</strong></p>
+</div>`;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,6 +49,10 @@ async function loadSettings() {
             const response = await fetch('/api/get-settings');
             if (!response.ok) throw new Error('Could not load settings');
             settings = await response.json();
+            localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+        }
+        if (settings.templates?.casual?.trim() === PREVIOUS_CASUAL_TEMPLATE.trim()) {
+            settings.templates.casual = UPDATED_CASUAL_TEMPLATE;
             localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
         }
         
