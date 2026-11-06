@@ -3,6 +3,7 @@ import json
 import datetime
 import re
 import os
+import secrets
 import tempfile
 from functools import wraps
 from urllib.parse import quote
@@ -21,9 +22,9 @@ app = Flask(__name__,
 # Use environment variable for secret key in production
 _secret = os.environ.get('SECRET_KEY')
 if not _secret:
-    if os.environ.get('PORT'):
-        raise RuntimeError("SECRET_KEY environment variable is required in production")
-    _secret = 'dev-only-' + os.urandom(8).hex()
+    # Allow hosts whose dashboard configuration omits the Render blueprint
+    # variable to start. Sessions will be invalidated on restart in this case.
+    _secret = secrets.token_hex(32)
 app.secret_key = _secret
 # Keep settings and email history server-side. Flask's default signed cookie
 # cannot safely hold the complete templates and multiple history entries.
