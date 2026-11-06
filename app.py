@@ -59,11 +59,11 @@ DEFAULT_TEMPLATES = {
     'casual': """<div style="font-family: 'Segoe UI', sans-serif;">
 <p>Hi <strong>{recipient_name}</strong>,</p>
 
-<p>Just a quick heads-up that <strong>{student_name}</strong> will be out from <strong>{start_datetime}</strong> to <strong>{end_datetime}</strong>.</p>
+<p>I wanted to let you know that <strong>{student_name}</strong> will be away from <strong>{start_datetime}</strong> to <strong>{end_datetime}</strong>.</p>
 
-<p>It's because of {reason}. Thanks so much for understanding!</p>
+<p>The reason for the absence is {reason}. Thank you for your understanding.</p>
 
-<p>Best,<br>
+<p>Best regards,<br>
 <strong>{parent_name}</strong></p>
 </div>""",
 
