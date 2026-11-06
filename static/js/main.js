@@ -38,6 +38,34 @@ const UPDATED_CASUAL_TEMPLATE = `<div style="font-family: 'Segoe UI', sans-serif
 <p>Best regards,<br>
 <strong>{parent_name}</strong></p>
 </div>`;
+const LEGACY_ENTERTAINING_TEMPLATE = `<div style="font-family: 'Comic Sans MS', cursive, sans-serif;">
+<p>\u{1F3AD} <strong>DRAMATIC LEAVE ANNOUNCEMENT</strong> \u{1F3AD}</p>
+
+<p>Dear <strong>{recipient_name}</strong>,</p>
+
+<p>By royal decree of the <strong>{parent_name}</strong> household, <strong>{student_name}</strong> shall be embarking on a magnificent journey away from academia from <strong>{start_datetime}</strong> until <strong>{end_datetime}</strong>.</p>
+
+<p><strong>The official reason:</strong> {reason}</p>
+
+<p>Fear not! {student_name} shall return with tales to tell and homework completed.</p>
+
+<p>Dramatically yours,<br>
+<strong>{parent_name}</strong> \u{2728}</p>
+</div>`;
+const UPDATED_ENTERTAINING_TEMPLATE = `<div style="font-family: 'Comic Sans MS', cursive, sans-serif;">
+<p><strong>DRAMATIC LEAVE ANNOUNCEMENT</strong></p>
+
+<p>Dear <strong>{recipient_name}</strong>,</p>
+
+<p>By royal decree of the <strong>{parent_name}</strong> household, <strong>{student_name}</strong> shall be embarking on a magnificent journey away from academia from <strong>{start_datetime}</strong> until <strong>{end_datetime}</strong>.</p>
+
+<p><strong>The official reason:</strong> {reason}</p>
+
+<p>Fear not! {student_name} shall return with tales to tell and homework completed.</p>
+
+<p>Dramatically yours,<br>
+<strong>{parent_name}</strong></p>
+</div>`;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -62,6 +90,10 @@ async function loadSettings() {
         }
         if (LEGACY_CASUAL_TEMPLATES.some(template => settings.templates?.casual?.trim() === template.trim())) {
             settings.templates.casual = UPDATED_CASUAL_TEMPLATE;
+            localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+        }
+        if (settings.templates?.entertaining?.trim() === LEGACY_ENTERTAINING_TEMPLATE.trim()) {
+            settings.templates.entertaining = UPDATED_ENTERTAINING_TEMPLATE;
             localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
         }
         
@@ -159,10 +191,10 @@ function updateDuration() {
     
     if (start && end && durationDisplay) {
         const duration = calculateDuration(start, end);
-        durationDisplay.textContent = `⏱️ Duration: ${duration}`;
+        durationDisplay.textContent = `Duration: ${duration}`;
         durationDisplay.style.background = '#10B98120';
     } else if (durationDisplay) {
-        durationDisplay.textContent = '⏱️ Duration: Not selected';
+        durationDisplay.textContent = 'Duration: Not selected';
         durationDisplay.style.background = '';
     }
 }
@@ -391,7 +423,7 @@ function confirmPattern() {
         storedPattern = patternString;
         const status = document.getElementById('patternStatus');
         if (status) {
-            status.innerHTML = '✅ Pattern saved! Draw again to confirm';
+            status.textContent = 'Pattern saved. Draw again to confirm';
             status.className = 'pattern-status success';
         }
         currentPattern = [];
@@ -408,7 +440,7 @@ function confirmPattern() {
         if (patternString === storedPattern) {
             const status = document.getElementById('patternStatus');
             if (status) {
-                status.innerHTML = '✅ Pattern confirmed!';
+                status.textContent = 'Pattern confirmed';
                 status.className = 'pattern-status success';
             }
             const patternValue = document.getElementById('patternValue');
@@ -417,7 +449,7 @@ function confirmPattern() {
         } else {
             const status = document.getElementById('patternStatus');
             if (status) {
-                status.innerHTML = '❌ Patterns do not match! Try again';
+                status.textContent = 'Patterns do not match. Try again';
                 status.className = 'pattern-status error';
             }
             currentPattern = [];
@@ -454,7 +486,7 @@ function startVoiceInput() {
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     
-    showToast('🎤 Listening... Speak now');
+    showToast('Listening. Speak now');
     
     recognition.onresult = async (event) => {
         const transcript = event.results[0][0].transcript;
@@ -487,7 +519,7 @@ function startVoiceInput() {
                 updateDuration();
             }
             
-            showToast('✅ Voice input processed!');
+            showToast('Voice input processed');
         } catch (error) {
             showToast('Error processing voice input');
         }
@@ -558,8 +590,8 @@ function showEmailDraft(data) {
     const copyButton = document.getElementById('copyEmailBtn');
     if (!previewDiv || !subjectDiv || !bodyDiv) return;
 
-    subjectDiv.textContent = `📧 ${data.subject || 'Leave request'}`;
-    bodyDiv.textContent = data.body_plain || '';
+    subjectDiv.textContent = removeEmojis(data.subject || 'Leave request');
+    bodyDiv.textContent = removeEmojis(data.body_plain || '');
     previewDiv.style.display = 'block';
     if (openLink) {
         openLink.href = data.mailto_link || '#';
@@ -590,7 +622,7 @@ function checkSecurityAndSend() {
             if (authenticated) {
                 await sendEmail();
             } else {
-                showToast('❌ Authentication cancelled');
+                showToast('Authentication cancelled');
             }
         });
     } else {
@@ -616,8 +648,8 @@ function showSecurityModal(callback) {
     if (lockType === 'pin') {
         content = `
             <div class="modal-content">
-                <h3>🔐 Enter PIN</h3>
-                <input type="password" id="securityInput" class="form-input security-input" maxlength="6" placeholder="••••••" autofocus>
+                <h3>Enter PIN</h3>
+                <input type="password" id="securityInput" class="form-input security-input" maxlength="6" placeholder="Enter PIN" autofocus>
                 <div class="modal-buttons">
                     <button id="securitySubmitBtn" class="btn btn-primary">Verify</button>
                     <button id="securityCancelBtn" class="btn btn-secondary">Cancel</button>
@@ -627,7 +659,7 @@ function showSecurityModal(callback) {
     } else if (lockType === 'password') {
         content = `
             <div class="modal-content">
-                <h3>🔐 Enter Password</h3>
+                <h3>Enter Password</h3>
                 <input type="password" id="securityInput" class="form-input" placeholder="Enter your password" autofocus>
                 <div class="modal-buttons">
                     <button id="securitySubmitBtn" class="btn btn-primary">Verify</button>
@@ -660,7 +692,7 @@ function showSecurityModal(callback) {
             modal.style.display = 'none';
             callback(true);
         } else {
-            showToast('❌ Invalid credentials');
+            showToast('Invalid credentials');
             if (input) input.value = '';
             input?.focus();
         }
@@ -755,7 +787,7 @@ async function saveSettings() {
         const pin = document.getElementById('pinCode')?.value || '';
         const confirm = document.getElementById('pinConfirm')?.value || '';
         if (pin !== confirm) {
-            showToast('❌ PINs do not match');
+            showToast('PINs do not match');
             return;
         }
         if (pin && (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin))) {
@@ -767,7 +799,7 @@ async function saveSettings() {
         const pwd = document.getElementById('password')?.value || '';
         const confirm = document.getElementById('passwordConfirm')?.value || '';
         if (pwd !== confirm) {
-            showToast('❌ Passwords do not match');
+            showToast('Passwords do not match');
             return;
         }
         if (pwd && pwd.length < 4) {
@@ -814,7 +846,7 @@ async function saveSettings() {
     try {
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsData));
         settings = settingsData;
-        showToast('✅ Settings saved on this device');
+        showToast('Settings saved on this device');
         applyAccessibilitySettings();
         setTheme(settingsData.theme);
     } catch (error) {
@@ -869,6 +901,13 @@ function loadTheme() {
 }
 
 // Load history
+function removeEmojis(value) {
+    return String(value ?? '')
+        .replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}\uFE0F\u200D\u20E3]/gu, '')
+        .replace(/[ \t]{2,}/g, ' ')
+        .trim();
+}
+
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, character => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -906,10 +945,10 @@ async function loadHistory() {
             const div = document.createElement('div');
             div.className = 'history-item';
             div.innerHTML = `
-                <div class="history-date">📅 ${new Date(item.timestamp).toLocaleString()}</div>
-                <div class="history-student">👤 ${escapeHtml(item.student || 'Unknown')}</div>
-                <div class="history-reason">📝 ${escapeHtml((item.reason || '').substring(0, 100))}${(item.reason || '').length > 100 ? '...' : ''}</div>
-                <div class="history-dates">📆 ${escapeHtml(item.start?.substring(0, 10) || '?')} → ${escapeHtml(item.end?.substring(0, 10) || '?')}</div>
+                <div class="history-date">${new Date(item.timestamp).toLocaleString()}</div>
+                <div class="history-student">Student: ${escapeHtml(removeEmojis(item.student || 'Unknown'))}</div>
+                <div class="history-reason">Reason: ${escapeHtml(removeEmojis((item.reason || '').substring(0, 100)))}${(item.reason || '').length > 100 ? '...' : ''}</div>
+                <div class="history-dates">${escapeHtml(item.start?.substring(0, 10) || '?')} → ${escapeHtml(item.end?.substring(0, 10) || '?')}</div>
             `;
             div.addEventListener('click', () => showHistoryDetail(item));
             container.appendChild(div);
@@ -927,13 +966,13 @@ function showHistoryDetail(item) {
     if (!modal || !content) return;
     
     content.innerHTML = `
-        <p><strong>📅 Sent:</strong> ${new Date(item.timestamp).toLocaleString()}</p>
-        <p><strong>👤 Student:</strong> ${escapeHtml(item.student)}</p>
-        <p><strong>📆 Leave:</strong> ${escapeHtml(item.start?.substring(0, 16) || '?')} → ${escapeHtml(item.end?.substring(0, 16) || '?')}</p>
-        <p><strong>📝 Reason:</strong> ${escapeHtml(item.reason)}</p>
-        <p><strong>📧 Subject:</strong> ${escapeHtml(item.subject)}</p>
+        <p><strong>Created:</strong> ${new Date(item.timestamp).toLocaleString()}</p>
+        <p><strong>Student:</strong> ${escapeHtml(removeEmojis(item.student))}</p>
+        <p><strong>Leave dates:</strong> ${escapeHtml(item.start?.substring(0, 16) || '?')} → ${escapeHtml(item.end?.substring(0, 16) || '?')}</p>
+        <p><strong>Reason:</strong> ${escapeHtml(removeEmojis(item.reason))}</p>
+        <p><strong>Subject:</strong> ${escapeHtml(removeEmojis(item.subject))}</p>
         <hr>
-        <div class="preview-body" style="max-height: 300px; overflow-y: auto;">${escapeHtml(item.body_plain || item.body || '').replace(/\n/g, '<br>')}</div>
+        <div class="preview-body" style="max-height: 300px; overflow-y: auto;">${escapeHtml(removeEmojis(item.body_plain || item.body || '')).replace(/\n/g, '<br>')}</div>
     `;
     
     modal.style.display = 'flex';
@@ -990,8 +1029,8 @@ function showSecurityModal(callback) {
     
     if (lockType === 'pin') {
         modalContent.innerHTML = `
-            <h3>🔐 Enter PIN</h3>
-            <input type="password" id="securityPinInput" class="form-input security-input" maxlength="6" pattern="[0-9]*" inputmode="numeric" placeholder="••••••" autofocus>
+                <h3>Enter PIN</h3>
+                <input type="password" id="securityPinInput" class="form-input security-input" maxlength="6" pattern="[0-9]*" inputmode="numeric" placeholder="Enter PIN" autofocus>
             <div class="modal-buttons">
                 <button id="securitySubmitBtn" class="btn btn-primary">Verify</button>
                 <button id="securityCancelBtn" class="btn btn-secondary">Cancel</button>
@@ -1010,7 +1049,7 @@ function showSecurityModal(callback) {
                 modal.style.display = 'none';
                 callback(true);
             } else {
-                showToast('❌ Invalid PIN');
+                showToast('Invalid PIN');
                 input.value = '';
                 input.focus();
             }
@@ -1025,7 +1064,7 @@ function showSecurityModal(callback) {
         
     } else if (lockType === 'password') {
         modalContent.innerHTML = `
-            <h3>🔐 Enter Password</h3>
+                <h3>Enter Password</h3>
             <input type="password" id="securityPasswordInput" class="form-input" placeholder="Enter your password" autofocus>
             <div class="modal-buttons">
                 <button id="securitySubmitBtn" class="btn btn-primary">Verify</button>
@@ -1045,7 +1084,7 @@ function showSecurityModal(callback) {
                 modal.style.display = 'none';
                 callback(true);
             } else {
-                showToast('❌ Invalid Password');
+                showToast('Invalid Password');
                 input.value = '';
                 input.focus();
             }
@@ -1060,7 +1099,7 @@ function showSecurityModal(callback) {
         
     } else if (lockType === 'pattern') {
         modalContent.innerHTML = `
-            <h3>🎨 Draw Pattern</h3>
+            <h3>Draw Pattern</h3>
             <div class="pattern-container">
                 <div class="pattern-grid" id="patternVerifyGrid"></div>
             </div>
@@ -1092,14 +1131,14 @@ function showSecurityModal(callback) {
                     if (enteredPattern.length >= 4) {
                         const enteredStr = enteredPattern.join('');
                         if (enteredStr === storedPattern) {
-                            status.innerHTML = '✅ Pattern correct!';
+                            status.textContent = 'Pattern correct';
                             status.className = 'pattern-status success';
                             setTimeout(() => {
                                 modal.style.display = 'none';
                                 callback(true);
                             }, 500);
                         } else {
-                            status.innerHTML = '❌ Incorrect pattern! Try again';
+                            status.textContent = 'Incorrect pattern. Try again';
                             status.className = 'pattern-status error';
                             setTimeout(() => {
                                 enteredPattern = [];

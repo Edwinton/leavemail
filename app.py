@@ -68,7 +68,7 @@ DEFAULT_TEMPLATES = {
 </div>""",
 
     'entertaining': """<div style="font-family: 'Comic Sans MS', cursive, sans-serif;">
-<p>🎭 <strong>DRAMATIC LEAVE ANNOUNCEMENT</strong> 🎭</p>
+<p><strong>DRAMATIC LEAVE ANNOUNCEMENT</strong></p>
 
 <p>Dear <strong>{recipient_name}</strong>,</p>
 
@@ -79,7 +79,7 @@ DEFAULT_TEMPLATES = {
 <p>Fear not! {student_name} shall return with tales to tell and homework completed.</p>
 
 <p>Dramatically yours,<br>
-<strong>{parent_name}</strong> ✨</p>
+<strong>{parent_name}</strong></p>
 </div>""",
 
     'custom': """<div style="font-family: Arial, sans-serif;">
@@ -125,10 +125,10 @@ EMAIL_THEMES = {
 # Page themes
 THEMES = {
     'default': {'name': 'Default', 'css': 'default.css'},
-    'christmas': {'name': 'Christmas 🎄', 'css': 'christmas.css'},
-    'onam': {'name': 'Onam 🌸', 'css': 'onam.css'},
-    'newyear': {'name': 'New Year 🎆', 'css': 'newyear.css'},
-    'independence': {'name': 'Independence Day 🇮🇳', 'css': 'independence.css'}
+    'christmas': {'name': 'Christmas', 'css': 'christmas.css'},
+    'onam': {'name': 'Onam', 'css': 'onam.css'},
+    'newyear': {'name': 'New Year', 'css': 'newyear.css'},
+    'independence': {'name': 'Independence Day', 'css': 'independence.css'}
 }
 
 def format_datetime(dt_string):
@@ -312,19 +312,19 @@ def voice_input():
     }
     
     if 'fever' in transcript or 'sick' in transcript or 'ill' in transcript:
-        extracted['reason'] = '🤒 Sick leave - Medical condition'
+        extracted['reason'] = 'Sick leave - Medical condition'
         extracted['confidence'] = 'high'
     elif 'family' in transcript or 'function' in transcript or 'wedding' in transcript:
-        extracted['reason'] = '👨‍👩‍👧 Family function/event'
+        extracted['reason'] = 'Family function/event'
         extracted['confidence'] = 'high'
     elif 'emergency' in transcript:
-        extracted['reason'] = '🚨 Family emergency'
+        extracted['reason'] = 'Family emergency'
         extracted['confidence'] = 'high'
     elif 'doctor' in transcript or 'appointment' in transcript:
-        extracted['reason'] = '🏥 Medical appointment'
+        extracted['reason'] = 'Medical appointment'
         extracted['confidence'] = 'high'
     elif 'travel' in transcript or 'trip' in transcript:
-        extracted['reason'] = '✈️ Family travel'
+        extracted['reason'] = 'Family travel'
         extracted['confidence'] = 'medium'
     else:
         extracted['reason'] = transcript
